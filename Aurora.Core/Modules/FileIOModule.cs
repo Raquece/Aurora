@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -62,10 +63,18 @@ namespace Aurora.Core.Modules
 
         public Task Append(string file, string text)
         {
+            return Append(file, Encoding.ASCII.GetBytes(text));
+        }
+
+        public Task Append(string file, byte[] bytes)
+        {
             var fileInfo = new FileInfo(file);
-            var task = new Task<byte[]>(() => 
+            var task = new Task<byte[]>(() =>
             {
-                File.AppendAllLines(file, new string[] { text });
+                using var stream = File.Open(file, FileMode.Append);
+                stream.Write(bytes, 0, bytes.Length);
+                stream.Flush();
+                stream.Close();
                 return null;
             });
 
