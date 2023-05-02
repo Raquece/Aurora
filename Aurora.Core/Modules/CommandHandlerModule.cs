@@ -78,8 +78,12 @@ namespace Aurora.Core.Modules
             return true;
         }
 
+        /// <summary>
+        /// Processes an input, event subscriber for receiving an input on the terminal.
+        /// </summary>
         private void ProcessCommand(object sender, InputReceivedEventArgs e)
         {
+            // Checks input is not empty
             if (e.Input == string.Empty || e.Input == null)
             {
                 return;
@@ -93,11 +97,17 @@ namespace Aurora.Core.Modules
                 .Select(m => m.Value)
                 .ToArray();
 
+            // Finds the method of the command and arguments
             string[] args = null;
             MethodInfo commandMethod = null;
             if (commands.ContainsKey(splits[0]))
             {
                 commandMethod = CheckBranch(commands[splits[0]], splits.Skip(1).ToArray(), out args);
+            }
+
+            if (commandMethod != null)
+            {
+                _terminal.Warn("No command found", this);
             }
 
             try
@@ -120,14 +130,6 @@ namespace Aurora.Core.Modules
                     _terminal.Error($"Could not parse input. Expected {commandMethod.GetParameters().Length} arguments, received {args.Length}", this);
                 }
             }
-            //catch (ArgumentException _)
-            //{
-            //    // Invalid argument received
-
-            //    if (args == null)
-            //    {
-            //    }
-            //}
         }
 
         /// <summary>
@@ -140,37 +142,52 @@ namespace Aurora.Core.Modules
         {
             args = null;
 
+            // Check that no remaining part of the command is left to search
             if (splits.Length == 0)
             {
                 return null;
             }
 
+            // Check if branch contains any commands with the next part of the remaining command
             if (branch.Commands.ContainsKey(splits[0]))
             {
+                // Command found
+
+                // Return arguments as the remaining parts of the input after the command
                 if (splits.Length != 1)
                 {
                     args = splits.Skip(1).ToArray();
                 }
+
+                // Return the method of the command
                 return branch.Commands[splits[0]];
             }
             else
             {
+                // Check if a branch contains the keyword from the remaining part of the command
                 if (branch.Branches.ContainsKey(splits[0]))
                 {
                     return CheckBranch(branch.Branches[splits[0]], splits.Skip(1).ToArray(), out args);
                 }
             }
 
+            // No command or branches found, command does not exist.
             return null;
         }
 
         /// <summary>
-        /// 
+        /// Represents a part of a command.
         /// </summary>
         private class CommandBranch
         {
+            /// <summary>
+            /// Represents a group of commands
+            /// </summary>
             public Dictionary<string, CommandBranch> Branches { get; } = new Dictionary<string, CommandBranch>();
 
+            /// <summary>
+            /// Represents the commands found in this group
+            /// </summary>
             public Dictionary<string, MethodInfo> Commands { get; } = new Dictionary<string, MethodInfo>();
         }
     }

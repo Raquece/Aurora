@@ -1,8 +1,12 @@
-﻿using Aurora.Core.Modules.Events;
+﻿using Aurora.Core.IO;
+using Aurora.Core.Modules.Events;
 using PacketDotNet;
 using PacketDotNet.Ieee80211;
+using SharpPcap.LibPcap;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -29,35 +33,37 @@ namespace Aurora.Core.Modules
         private readonly ListenerModule _listener;
         private readonly TerminalModule _terminal;
 
-        private bool started = false;
-
         public override bool Initialise()
         {
+            // Opens the network log file reader.
             _file.OpenReader("logs/network.log", FileIOModule.ThreadPersistence.Dedicated);
-            _file.OpenReader("logs/network.pcap", FileIOModule.ThreadPersistence.Dedicated);
 
             return true;
         }
 
+        /// <summary>
+        /// Logs packet details
+        /// </summary>
+        /// <param name="e">The packet captured event arguments</param>
         private void LogPacket(PacketCapturedEventArgs e)
         {
             var packet = e.Packet.GetPacket();
 
-            _file.Append("logs/network.pcap", e.Packet.Data);
-
+            // Log TCP packet data
             var tcpPacket = packet.Extract<TcpPacket>();
             if (tcpPacket != null)
             {
                 var ipPacket = (IPPacket)tcpPacket.ParentPacket;
-                _file.Append("logs/network.log", $"Captured on DEV {e.CaptureDevice.Name} [{e.Packet.Timeval.Date}] TCP {ipPacket.SourceAddress}:{tcpPacket.SourcePort} => {ipPacket.DestinationAddress}:{tcpPacket.DestinationPort}");
+                _file.Append("logs/network.log", $"Captured on DEV {e.CaptureDevice.Name} [{e.Packet.Timeval.Date}] TCP {ipPacket.SourceAddress}:{tcpPacket.SourcePort} => {ipPacket.DestinationAddress}:{tcpPacket.DestinationPort}{Environment.NewLine}");
                 return;
             }
 
+            // Log UDP packet data
             var udpPacket = packet.Extract<UdpPacket>();
             if (udpPacket != null)
             {
                 var ipPacket = (IPPacket)udpPacket.ParentPacket;
-                _file.Append("logs/network.log", $"Captured on DEV {e.CaptureDevice.Name} [{e.Packet.Timeval.Date}] UDP {ipPacket.SourceAddress}:{udpPacket.SourcePort} => {ipPacket.DestinationAddress}:{udpPacket.DestinationPort}");
+                _file.Append("logs/network.log", $"Captured on DEV {e.CaptureDevice.Name} [{e.Packet.Timeval.Date}] UDP {ipPacket.SourceAddress}:{udpPacket.SourcePort} => {ipPacket.DestinationAddress}:{udpPacket.DestinationPort}{Environment.NewLine}");
                 return;
             }
         }
@@ -66,18 +72,18 @@ namespace Aurora.Core.Modules
         /// Starts the listener
         /// </summary>
         [Command("start")]
-        public void Start()
+        public void Start(string device)
         {
-            _listener.OnPacketCaptured += _listener_OnPacketCaptured;
+            _listener.StartInterfaceCapture(device);
         }
 
         /// <summary>
         /// Stops the listener
         /// </summary>
         [Command("stop")]
-        public void Stop()
+        public void Stop(string device)
         {
-            _listener.OnPacketCaptured -= _listener_OnPacketCaptured;
+            _listener.StopInterfaceCapture(device);
         }
 
         /// <summary>
@@ -141,13 +147,20 @@ namespace Aurora.Core.Modules
             }
         }
 
+        /// <summary>
+        /// Event subscriber for when a packet is captured. Logs packet information if configuration requires logging.
+        /// </summary>
         private void _listener_OnPacketCaptured(object sender, PacketCapturedEventArgs e)
         {
+            // Checks event arguments are not null
             if (e == null)
             {
                 return;
             }
 
+            // Log packets if configuration dictates that the packet should be logged.
+
+            // Check if interfaces is required to be monitored.
             if (Configuration.Interfaces.Exists(i => i == e.CaptureDevice.Name || i == "any" || i == "*"))
             {
                 LogPacket(e);

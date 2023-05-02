@@ -52,6 +52,7 @@ namespace Aurora.Core.Concurrency
             {
                 IsBackground = true
             };
+
             thread.Start();
         }
     }

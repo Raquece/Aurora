@@ -85,8 +85,14 @@ namespace Aurora.Core.Modules
     /// <typeparam name="T">The class of the configuration file.</typeparam>
     public abstract class Module<T> : Module
     {
+        /// <summary>
+        /// The file location of the configuration file
+        /// </summary>
         public abstract string ConfigurationFileName { get; }
 
+        /// <summary>
+        /// The configuration of the module
+        /// </summary>
         public T Configuration { get; set; }
     }
 }

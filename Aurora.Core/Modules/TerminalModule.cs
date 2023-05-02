@@ -9,6 +9,7 @@ namespace Aurora.Core.Modules
     /// <summary>
     /// Controls usage of terminal
     /// </summary>
+    [Command("console")]
     public class TerminalModule : Module
     {
         /// <summary>
@@ -22,7 +23,12 @@ namespace Aurora.Core.Modules
         /// <returns>Initialisation result.</returns>
         public override bool Initialise()
         {
-            Thread inputHandler = new Thread(ReadLoop);
+            // Create a new thread to take user's input
+            Thread inputHandler = new Thread(ReadLoop)
+            { 
+                IsBackground = true,
+                Name = "input-loop",
+            };
             inputHandler.Start();
 
             return true;
@@ -37,12 +43,18 @@ namespace Aurora.Core.Modules
             Console.WriteLine(text);
         }
 
+        /// <summary>
+        /// Displays a text information
+        /// </summary>
         public void Info(string text, Module module)
         {
             Console.Write("[INFO] ");
             Console.WriteLine($"{module.Name} >> {text}");
         }
 
+        /// <summary>
+        /// Displays a text warning
+        /// </summary>
         public void Warn(string text, Module module)
         {
             var col = Console.ForegroundColor;
@@ -52,6 +64,9 @@ namespace Aurora.Core.Modules
             Console.WriteLine($"{module.Name} >> {text}");
         }
 
+        /// <summary>
+        /// Displays a text error
+        /// </summary>
         public void Error(string text, Module module)
         {
             var col = Console.ForegroundColor;
@@ -61,12 +76,16 @@ namespace Aurora.Core.Modules
             Console.WriteLine($"{module.Name} >> {text}");
         }
 
+        /// <summary>
+        /// Constantly takes input form the console
+        /// </summary>
         public void ReadLoop()
         {
             while(true)
             {
                 var input = ReadLine();
 
+                // Fire event corresponding to when an input is received
                 OnInputEntered?.Invoke(this, new InputReceivedEventArgs()
                 {
                     Input = input
@@ -74,10 +93,23 @@ namespace Aurora.Core.Modules
             }
         }
 
+        /// <summary>
+        /// Displayed when reading a line from the console
+        /// </summary>
+        /// <returns>The user input</returns>
         public string ReadLine()
         {
             Console.Write(" > ");
             return Console.ReadLine();
+        }
+
+        /// <summary>
+        /// Clears the terminal
+        /// </summary>
+        [Command("clear")]
+        public void Clear()
+        {
+            Console.Clear();
         }
     }
 }

@@ -40,11 +40,15 @@ namespace Aurora
             {
                 // If plugins folder does exist, iterate through each file
 
+                // Iterate through each file in the plugin directory
                 foreach (var file in pluginsDirectory.GetFiles())
                 {
                     try
                     {
+                        // Attempt to load assembly through file
                         Assembly plugin = Assembly.LoadFrom(file.FullName);
+
+                        // Add the modules found in the assembly
                         AddModules(plugin, ref serviceTypes);
                     } 
                     catch (BadImageFormatException _)

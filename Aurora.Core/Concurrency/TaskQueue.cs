@@ -32,14 +32,4 @@ namespace Aurora.Core.Concurrency
         /// </summary>
         protected abstract void Start();
     }
-
-    /// <summary>
-    /// Abstract class for implementation of asynchronous task queues with a common resource.
-    /// </summary>
-    /// <typeparam name="T">The return type of the tasks</typeparam>
-    /// <typeparam name="R">The common resource used in all tasks</typeparam>
-    public abstract class TaskQueue<T,R> : TaskQueue<T>
-    {
-        public T Resource { get; set; }
-    }
 }
