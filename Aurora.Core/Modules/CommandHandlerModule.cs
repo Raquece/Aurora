@@ -105,9 +105,11 @@ namespace Aurora.Core.Modules
                 commandMethod = CheckBranch(commands[splits[0]], splits.Skip(1).ToArray(), out args);
             }
 
-            if (commandMethod != null)
+            // Check if command was found
+            if (commandMethod == null)
             {
                 _terminal.Warn("No command found", this);
+                return;
             }
 
             try

@@ -134,7 +134,6 @@ namespace Aurora.Core.Modules
         /// <summary>
         /// Lists all devices that are currently being dumped.
         /// </summary>
-        /// <param name="dev"></param>
         [Command("list")]
         public void ListCapturedDevices()
         {
@@ -142,6 +141,18 @@ namespace Aurora.Core.Modules
             foreach (var device in capturingDevices.Keys)
             {
                 _terminal.Info($" - {device}", this);
+            }
+        }
+
+        /// <summary>
+        /// Lists all devices
+        /// </summary>
+        [Command("list", "devices")]
+        public void ListDevices()
+        {
+            foreach (var device in CaptureDeviceList.Instance)
+            {
+                _terminal.Info($"{device.Name}", this);
             }
         }
 

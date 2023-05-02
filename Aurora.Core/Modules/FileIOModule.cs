@@ -138,6 +138,35 @@ namespace Aurora.Core.Modules
         }
 
         /// <summary>
+        /// Performs a custom action with the file
+        /// </summary>
+        /// <param name="file">The file to operate on</param>
+        /// <param name="func">The function to perform on the file</param>
+        /// <returns>The output of the function</returns>
+        public Task<byte[]> PerformAction(string file, Func<string, byte[]> func)
+        {
+            // Gets the file information
+            var fileInfo = new FileInfo(file);
+
+            // Create the task
+            var task = new Task<byte[]>(() => func(file));
+
+            if (taskDictionary.ContainsKey(fileInfo.FullName))
+            {
+                // Add the task to the task queue.
+                taskDictionary[fileInfo.FullName].Enqueue(task);
+            }
+            else
+            {
+                // File reader has not been opened yet
+
+                throw new ArgumentException("File does not have an associated reader");
+            }
+
+            return task;
+        }
+
+        /// <summary>
         /// Denotes how long a thread should be kept alive
         /// </summary>
         public enum ThreadPersistence

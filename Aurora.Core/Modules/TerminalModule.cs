@@ -9,7 +9,7 @@ namespace Aurora.Core.Modules
     /// <summary>
     /// Controls usage of terminal
     /// </summary>
-    [Command("console")]
+    [BaseCommand("console")]
     public class TerminalModule : Module
     {
         /// <summary>
@@ -26,8 +26,7 @@ namespace Aurora.Core.Modules
             // Create a new thread to take user's input
             Thread inputHandler = new Thread(ReadLoop)
             { 
-                IsBackground = true,
-                Name = "input-loop",
+                Name = "input-loop"
             };
             inputHandler.Start();
 
